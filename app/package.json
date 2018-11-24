@@ -13,12 +13,14 @@
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.3",
     "cryptiles": "^4.1.1",
+    "ethereumjs-testrpc": "^6.0.3",
     "express": "^4.15.2",
     "express-bearer-token": "^2.1.0",
     "express-jwt": "^5.1.0",
     "express-session": "^1.15.2",
     "flexboxgrid": "^6.3.1",
     "fs": "0.0.1-security",
+    "ganache-cli": "^6.2.3",
     "home-dir": "^1.0.0",
     "log4js": "^0.6.38",
     "material-ui": "^0.16.0-rc2",
@@ -35,7 +37,8 @@
     "react-select": "^1.0.0-rc.2",
     "react-svg-piechart": "^2.0.3",
     "react-tap-event-plugin": "^2.0.1",
-    "stylus-loader": "^3.0.2"
+    "stylus-loader": "^3.0.2",
+    "web3": "^1.0.0-beta.36"
   },
   "devDependencies": {
     "babel-core": "^6.16.0",

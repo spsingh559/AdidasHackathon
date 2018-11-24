@@ -119,11 +119,12 @@ export default class Login extends React.Component {
       
       if(data.data.response=="Succes"){
         sessionStorage.setItem('userLoginDetails',JSON.stringify(data.data));
-        if(data.data.role=="P"|| data.data.role=="I"){
-          this.context.router.push('/');
-        }else{
-          this.context.router.push('/adidas')
-        }
+        // if(data.data.role=="P"|| data.data.role=="I"){
+        //   this.context.router.push('/');
+        // }else{
+        //   this.context.router.push('/adidas')
+        // }
+        this.context.router.push('/adidas');
       }else{
         alert('login Failed');
       }

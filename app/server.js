@@ -24,6 +24,16 @@ app.use('/', express.static(path.join(__dirname, './webclient/')));
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/";
 
+// Web3 Configuration -----------------------------------
+var Web3 = require('web3');
+var ABI =require('./ABI');
+var web3 =new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+web3.eth.defaultAccount = '0x2d8ba2df7d45b160f7b05ec75347146d6227dba1';
+let contractAddress='0x9c824b4a3b65c5fd0f91b288909bf636743e7b91';
+ var sportsFunda = new web3.eth.Contract(ABI, contractAddress);
+ var AccountAddress= require('./webclient/components/AccountAddress');
+// Web3 Configuration End-----------------------------------
+ 
 
 app.post('/api/registration', function(req,response){
     console.log('api registration');
@@ -39,28 +49,6 @@ app.post('/api/registration', function(req,response){
         });
 
       });
-
-    //   let obj= {
-    //       _id:req.body._id,
-    //       name:req.body.name,
-    //       certificateName:"",
-    //       issuer:"",
-    //       did:"",
-    //       enrollStatus:false,
-    //       timeStamp:""
-    //   }
-
-    //   MongoClient.connect(url, function(err, db) {
-    //     if (err) throw err;
-    //     var dbo = db.db("sovrinDB");
-    //     dbo.collection("certificate").insertOne(obj, function(err, res) {
-    //       if (err) throw err;
-    //       console.log("1 document inserted");
-    //       response.send("success");
-    //     });
-
-    //   });
-
 })
 
 
@@ -107,76 +95,143 @@ app.post('/api/login', function(req,response){
 })
 
 
-// -----------------getUserByUserType for chatting-------------------
 
-app.patch('/api/sendMessage', function(req,response){
-    console.log('sendMessage api is');
-  
-    MongoClient.connect(url, function(err, db) {
-        if (err) throw err;
-        var dbo = db.db("sovrinDB");
-        var myquery = { _id: req.body._id };
-        var newvalues = { $set: {message: req.body.message } };
-        dbo.collection("channel").updateOne(myquery, newvalues, function(err, res) {
-          if (err) throw err;
-          console.log("1 document updated");
-          response.send("success");
-          db.close();
+app.post('/api/createContract',function(req,res){
+    console.log('/api/createContract');
+    console.log(req.body);
+    if(req.body.contractType=="A2I"){
+        sportsFunda.methods.createContractWithInvestor(req.body.contractId, req.body.counterPartyAddress,req.body.amount,req.body.returnPercentage,req.body.duration,req.body.contractType).send({from: web3.eth.defaultAccount, gas: 1000000})
+      .then(function(receipt){
+        console.log(receipt);
+        res.send({response:"success",
+            txHash:receipt.transactionHash
         });
-
-
+    });
+    }else{
+        sportsFunda.methods.createContractWithPlayer(req.body.contractId, req.body.counterPartyAddress,req.body.amount,req.body.returnPercentage,req.body.duration,req.body.contractType).send({from: web3.eth.defaultAccount, gas: 1000000})
+        .then(function(receipt){
+          console.log(receipt);
+          res.send({response:"success",
+            txHash:receipt.transactionHash
+        });
+      });
+    }
+    
 })
 
+app.get('/api/getMyContract/:address', function(req,res){
+console.log(req.params.address);
+sportsFunda.methods.myContract(req.params.address).call({from: web3.eth.defaultAccount, gas: 1000000}).then(function(receipt){
+    // console.log(receipt);
+    res.send(receipt);
+//     res.send({response:"success",
+//       txHash:receipt.transactionHash
+//   });
+});
 });
 
-// -----------------End getUserByUserType for chatting -------------------
+app.get('/api/payToAdidasByInvestor/:amount/:user', function(req,res){
+console.log(req.params.amount);
+console.log(AccountAddress[req.params.user]);
+if(req.params.user=="Player"){
+    sportsFunda.methods.PlayerPayToAdidas().send({from: AccountAddress[req.params.user], gas: 1000000, value:parseInt(req.params.amount)}).then(function(receipt){
+        console.log(receipt);
+        res.send({response:receipt.transactionHash});
+    });
+}else{
+    sportsFunda.methods.InvestorPayToAdidas().send({from: AccountAddress[req.params.user], gas: 1000000, value:parseInt(req.params.amount)}).then(function(receipt){
+        console.log(receipt);
+        res.send({response:receipt.transactionHash});
+    });
+}
+    });
 
-// -----------------create channel for chatting-------------------
+    app.post('/api/payToInvestorByAdidas', function(req,res){
+        console.log('api/payToInvestorByAdidas');
+        console.log(req.body);
+            sportsFunda.methods.AdidasPayToInvestor(req.body.investorAddress).send({from:  web3.eth.defaultAccount, gas: 1000000}).then(function(receipt){
+                console.log(receipt);
+                res.send({response:receipt.transactionHash});
+            });
+        })
 
-app.post('/api/createChannel', function(req,response){
-    console.log('createChannel api is');
-  
-    MongoClient.connect(url, function(err, db) {
-        if (err) throw err;
-        var dbo = db.db("sovrinDB");
-        // var query = {name: req.params.name};
-        dbo.collection("channel").insertOne(req.body, function(err, res) {
-            if (err) throw err;
-            console.log("createChannel done");
-            response.send("success");
-            db.close();
+app.get('/api/getAdidasBalance/:role/:name',function(req,res){
+    console.log('username is', req.params.name);
+    console.log('username is', req.params.role);
+    if(req.params.role=="I" || req.params.role=="P"){
+        // res.send({response:web3.eth.getBalance("0x20ce4ed62a78952d8f540bceaaf3759ca4e36566")});
+        web3.eth.getBalance(AccountAddress[req.params.name], (err, bal) => {
+            if (err) {
+              console.log(`getBalance error: ${err}`);
+            } else {
+                res.send({response:bal});
+              console.log('Balance is'+bal);
+            }
           });
-
-
-
+        // sportsFunda.methods.getBalanceAdidas().call({from: AccountAddress[req.params.name], gas: 1000000}).then(function(receipt){
+        //     console.log(receipt);
+        //     res.send({response:receipt});
+        // //     res.send({response:"success",
+        // //       txHash:receipt.transactionHash
+        // //   });
+        // });
+    }else{
+    sportsFunda.methods.getBalanceAdidas().call({from: web3.eth.defaultAccount, gas: 1000000}).then(function(receipt){
+        console.log(receipt);
+        res.send({response:receipt});
+    //     res.send({response:"success",
+    //       txHash:receipt.transactionHash
+    //   });
+    });
+}
 })
 
+app.post('/api/createRequest/:name',function(req,res){
+    console.log('/api/createRequest');
+    console.log(req.body);
+        sportsFunda.methods.createRequest(req.body._desc, req.body._rec,req.body._value).send({from: AccountAddress[req.params.name], gas: 1000000})
+      .then(function(receipt){
+        console.log(receipt);
+        res.send({response:"success",
+            txHash:receipt.transactionHash
+        });
+    });
 });
 
-// -----------------End getUserByUserType for chatting -------------------
-
-// -----------------getUserByUserType for adding to chat list-------------------
-
-app.get('/api/getChannelByPubOrSub/:name', function(req,response){
-    console.log('getChannelByPubOrSub api');
-   console.log('name received is', req.params.name)
-    MongoClient.connect(url, function(err, db) {
-        if (err) throw err;
-        var dbo = db.db("sovrinDB");
-        var query = {  $or: [ { channelPub: req.params.name }, { channelSub: req.params.name } ] };
-        dbo.collection("channel").find(query).toArray(function(err, result) {
-    if (err) throw err;
-    // console.log(result);
-    response.send({data:result})
-    db.close();
-  })
-
-
-
-})
-
+app.post('/api/sendVote',function(req,res){
+    console.log('/api/sendVote');
+    console.log(AccountAddress[req.body.name]);
+    console.log(req.body);
+        sportsFunda.methods.voteRequest(parseInt(req.body.index)).send({from: AccountAddress[req.body.name], gas: 1000000000})
+      .then(function(receipt){
+        console.log(receipt);
+        res.send({response:"success",
+            txHash:receipt.transactionHash
+        });
+    });
 });
 
+app.get('/api/noOfRequest',function(req,res){
+    console.log('/api/noOfRequest');
+    sportsFunda.methods.noOfRequest().call({from: web3.eth.defaultAccount, gas: 1000000}).then(function(receipt){
+        console.log(receipt);
+        res.send({response:receipt});
+    //     res.send({response:"success",
+    //       txHash:receipt.transactionHash
+    //   });
+    });
+});
+
+app.get('/api/eachRequest/:i',function(req,res){
+    console.log('/api/eachRequest');
+    sportsFunda.methods.viewVoteRequest(parseInt(req.params.i)).call({from: web3.eth.defaultAccount, gas: 1000000}).then(function(receipt){
+        console.log(receipt);
+        res.send({response:receipt});
+    //     res.send({response:"success",
+    //       txHash:receipt.transactionHash
+    //   });
+    });
+});
 // -----------------End getUserByUserType for adding to chat list -------------------
 
 

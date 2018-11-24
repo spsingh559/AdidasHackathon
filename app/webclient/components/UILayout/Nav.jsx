@@ -118,12 +118,11 @@ export default class Nav extends React.Component{
         <center style={{fontWeight:'bold',fontSize:16}}>Hello {retrievedUserDetails.name}</center>
         <Divider />
           <MenuItem onTouchTap={this.handleClose}>
-           <Link to="/"> Home </Link>
+           <Link to="/adidas"> Home </Link>
           </MenuItem>
-{retrievedUserDetails.role=="I"?
-<MenuItem onTouchTap={this.handleClose}>
-          <Link to ="/myVoting">My Vote</Link>
-          </MenuItem>:null}
+          <MenuItem onTouchTap={this.handleClose}>
+          <Link to ="/player">Budding Player</Link>
+          </MenuItem>
           <MenuItem onTouchTap={this.handleClose}>
           <Link to ="/myWallet">My Wallet</Link>
           </MenuItem>
@@ -131,10 +130,13 @@ export default class Nav extends React.Component{
            <MenuItem onTouchTap={this.handleClose}>
           <Link to ="/myContract">My Contract</Link>
           </MenuItem>
+{retrievedUserDetails.role=="P"?<MenuItem onTouchTap={this.handleClose}>
+<Link to ="/createRequest">Create Request</Link>
+</MenuItem>:<MenuItem onTouchTap={this.handleClose}>
+<Link to ="/voteForPlayer">Vote For Player Fund</Link>
+</MenuItem>}
 
-          <MenuItem onTouchTap={this.handleClose}>
-          <Link to ="/messaging">My Chat</Link>
-          </MenuItem>
+
           <MenuItem onTouchTap={this.handleClose}>
           <Link to ="/myProfile">My Profile</Link>
           </MenuItem>
@@ -183,14 +185,9 @@ export default class Nav extends React.Component{
                          <Link to="/adidas"> Home </Link>
                         </MenuItem>
 
-                        <MenuItem onTouchTap={this.handleClose}>
-                         <Link to="/onboarding"> Onboarding </Link>
-                        </MenuItem>
-
-                             <MenuItem onTouchTap={this.handleClose}>
-          <Link to ="/messaging">My Chat</Link>
+                     <MenuItem onTouchTap={this.handleClose}>
+          <Link to ="/player">Budding Player</Link>
           </MenuItem>
-          
                             
                          <MenuItem onTouchTap={this.handleClose}>
                          <Link to="/adidasContract"> Contract Management </Link>
@@ -218,3 +215,7 @@ export default class Nav extends React.Component{
 	
 	
 }
+
+// {retrievedUserDetails.role=="P"?<MenuItem onTouchTap={this.handleClose}>
+// // <Link to ="/myPayment">My Payment</Link>
+// // </MenuItem>:null}
